@@ -4,30 +4,53 @@
 
 ## 转换示例
 
-### 示例1：基本数据转换
+### 示例1：嵌套对象转换
 
 输入JSON:
 ```json
-{"name": "李田所", "age": 24}
+{
+  "user": {
+    "name": "李田所",
+    "age": 24,
+    "hobbies": ["王道征途", "泡泡浴"]
+  },
+  "count": 114514
+}
 ```
 
 输出解析结果:
 ```
-name = Value(index_key='name', value='李田所')
-age = Value(index_key='age', value=24)
-```
-
-### 示例2：复杂数据转换
-
-输入JSON:
-```json
-{"message": "人类有三大欲望：饮食、繁殖、睡眠", "count": 114514}
-```
-
-输出解析结果:
-```
-message = Value(index_key='message', value='人类有三大欲望：饮食、繁殖、睡眠')
+user.name = Value(index_key='user.name', value='李田所')
+user.age = Value(index_key='user.age', value=24)
+user.hobbies.0 = Value(index_key='user.hobbies.0', value='王道征途')
+user.hobbies.1 = Value(index_key='user.hobbies.1', value='泡泡浴')
 count = Value(index_key='count', value=114514)
+```
+
+### 示例2：深度嵌套转换
+
+输入JSON:
+```json
+{
+  "data": {
+    "users": [
+      {
+        "id": 114514,
+        "profile": {
+          "name": "李田所",
+          "message": "人类有三大欲望：饮食、繁殖、睡眠"
+        }
+      }
+    ]
+  }
+}
+```
+
+输出解析结果:
+```
+data.users.0.id = Value(index_key='data.users.0.id', value=114514)
+data.users.0.profile.name = Value(index_key='data.users.0.profile.name', value='李田所')
+data.users.0.profile.message = Value(index_key='data.users.0.profile.message', value='人类有三大欲望：饮食、繁殖、睡眠')
 ```
 
 ## 功能特点
