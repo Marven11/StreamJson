@@ -1,0 +1,1 @@
+{"name": "write_file", "args": {"override": true, "content": "from pathlib import Path\nimport json\n\nd = {\n    \"name\": \"write_file\",\n    \"args\": {\n        \"override\": True,\n        \"content\": Path(\"./test.py\").read_text()\n    }\n}\n\n\nPath(\"test.json\").write_text(json.dumps(d))"}}
