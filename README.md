@@ -2,6 +2,34 @@
 
 一个流式JSON解析器，支持分块输入JSON数据并实时输出解析结果。
 
+## 转换示例
+
+### 示例1：基本数据转换
+
+输入JSON:
+```json
+{"name": "李田所", "age": 24}
+```
+
+输出解析结果:
+```
+name = Value(index_key='name', value='李田所')
+age = Value(index_key='age', value=24)
+```
+
+### 示例2：复杂数据转换
+
+输入JSON:
+```json
+{"message": "人类有三大欲望：饮食、繁殖、睡眠", "count": 114514}
+```
+
+输出解析结果:
+```
+message = Value(index_key='message', value='人类有三大欲望：饮食、繁殖、睡眠')
+count = Value(index_key='count', value=114514)
+```
+
 ## 功能特点
 
 - 🚀 **流式解析**: 支持分块输入JSON数据，无需等待完整JSON即可开始解析
