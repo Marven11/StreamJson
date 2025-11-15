@@ -119,11 +119,11 @@ class StreamJsonParser:
             match current.pop(0):
                 case "[":
                     key = current.pop(0)
-                    assert isinstance(key, int)
+                    assert isinstance(key, int), f"{key=} {self.stack=}"
                     result.append(str(key))
                 case "{":
                     key = current.pop(0)
-                    assert isinstance(key, str)
+                    assert isinstance(key, str), f"{key=} {self.stack=}"
                     key_repr = (
                         key if re.match("^[0-9a-zA-Z-_]", key) else json.dumps(key)
                     )
@@ -134,17 +134,23 @@ class StreamJsonParser:
         """处理括号字符"""
         if c in "{[":
             self.stack.append(c)
+            if c == "[":
+                self.stack.append(0)
         elif c in "}]":
             if not self.stack:
                 self.state = ParserState.INVALID
                 raise RuntimeError("Stack is empty")
+            if isinstance(self.stack[-1], int):
+                self.stack.pop()
             pair = self.stack.pop()
             if pair != PAIRS[c]:
                 self.state = ParserState.INVALID
                 raise RuntimeError(f"Bracket mismatch: {pair!r} != {PAIRS[c]!r}")
             if self.stack:
-                used_key_index = self.stack.pop()
-                assert used_key_index not in ["{", "["]
+                key = self.stack.pop()
+                assert key not in ["{", "["]
+                if isinstance(key, int):
+                    self.stack.append(key + 1)
 
     def _handle_inside_object_value(self, c: str):
         """处理对象内部的值"""
@@ -173,9 +179,10 @@ class StreamJsonParser:
             return
 
         self.started = True
+        second_top = self.stack[-2] if len(self.stack) >= 2 else None
 
         # 处理逗号
-        if c == "," and current_top in ["{", "["]:
+        if c == "," and (current_top == "{" or second_top == "["):
             return
 
         # 处理对象中的冒号
@@ -194,13 +201,12 @@ class StreamJsonParser:
             return
 
         # 处理数组中的值
-        if current_top == "[":
+        if second_top == "[":
+            assert isinstance(current_top, int)
             if c == '"':
-                self.stack.append(0)
                 self.payload = '"'
                 self.state = ParserState.STRING_VALUE
             elif is_atomic_value_char(c):
-                self.stack.append(0)
                 self.payload = c
                 self.state = ParserState.ATOMIC_VALUE
             else:
@@ -217,9 +223,10 @@ class StreamJsonParser:
         if is_inside_object:
             self._handle_inside_object_value(c)
             return
-
+        
+        original_state = self.state
         self.state = ParserState.INVALID
-        raise RuntimeError(f"无法识别字符: {c!r} 在状态 {self.state.value}")
+        raise RuntimeError(f"无法识别字符: {c!r} 在状态 {original_state.value}")
 
     def feed_char_key(self, c: str):
         """处理键状态字符"""
@@ -246,7 +253,9 @@ class StreamJsonParser:
             value = json.loads(self.payload)
             self.payload = ""
             self.toyield.append(Value(index_key=index_key, value=value))
-            self.stack.pop()
+            key = self.stack.pop()
+            if isinstance(key, int):
+                self.stack.append(key + 1)
             self.state = ParserState.OUTSIDE
             self.feed_char(c)
         else:
@@ -271,7 +280,9 @@ class StreamJsonParser:
         if is_string_ended:
             value = json.loads(self.payload)
             self.toyield.append(Value(index_key=index_key, value=value))
-            self.stack.pop()
+            key = self.stack.pop()
+            if isinstance(key, int):
+                self.stack.append(key + 1)
             self.state = ParserState.OUTSIDE
             self.payload_string_parser = None
             self.payload = ""
@@ -356,4 +367,7 @@ def example2():
 
 def main():
     example1()
-    example2()
+    # example2()
+
+if __name__ == "__main__":
+    main()
