@@ -52,7 +52,7 @@ class Value:
 def is_atomic_value_char(c: str) -> bool:
     """检查字符是否为原子值起始字符"""
     assert len(c) == 1
-    return c in "0123456789truefalsenull"
+    return c in "0123456789truefalsenull-."
 
 
 def is_whitespace(c: str) -> bool:
@@ -223,7 +223,7 @@ class StreamJsonParser:
         if is_inside_object:
             self._handle_inside_object_value(c)
             return
-        
+
         original_state = self.state
         self.state = ParserState.INVALID
         raise RuntimeError(f"无法识别字符: {c!r} 在状态 {original_state.value}")
@@ -368,6 +368,7 @@ def example2():
 def main():
     example1()
     # example2()
+
 
 if __name__ == "__main__":
     main()
